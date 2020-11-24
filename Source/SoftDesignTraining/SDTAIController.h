@@ -44,8 +44,6 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool Landing = false;
 
-protected:
-
     enum PlayerInteractionBehavior
     {
         PlayerInteractionBehavior_Collect,
@@ -53,9 +51,9 @@ protected:
         PlayerInteractionBehavior_Flee
     };
 
+protected:
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
     void UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime);
-    PlayerInteractionBehavior GetCurrentPlayerInteractionBehavior(const FHitResult& hit);
     bool HasLoSOnHit(const FHitResult& hit);
     void MoveToRandomCollectible();
     void MoveToPlayer();
@@ -70,6 +68,10 @@ public:
     void SetActorLocation(const FVector& targetLocation);
     void AIStateInterrupted();
 
+    bool m_FoundPlayer = false; // Indique au BT si le joueur est visible ou non
+    bool FoundPlayer() { return m_FoundPlayer; }
+    PlayerInteractionBehavior m_PlayerInteractionBehavior;
+
 private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void UpdatePlayerInteraction(float deltaTime) override;
@@ -80,5 +82,4 @@ protected:
     FVector m_JumpTarget;
     FRotator m_ObstacleAvoidanceRotation;
     FTimerHandle m_PlayerInteractionNoLosTimer;
-    PlayerInteractionBehavior m_PlayerInteractionBehavior;
 };

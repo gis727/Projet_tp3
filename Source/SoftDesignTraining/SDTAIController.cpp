@@ -308,6 +308,8 @@ void ASDTAIController::AIStateInterrupted()
     m_ReachedTarget = true;
 }
 
+// Méthode remplacée par le Behavior Tree
+/*
 ASDTAIController::PlayerInteractionBehavior ASDTAIController::GetCurrentPlayerInteractionBehavior(const FHitResult& hit)
 {
     if (m_PlayerInteractionBehavior == PlayerInteractionBehavior_Collect)
@@ -330,6 +332,7 @@ ASDTAIController::PlayerInteractionBehavior ASDTAIController::GetCurrentPlayerIn
         return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
     }
 }
+*/
 
 void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit)
 {
@@ -353,11 +356,16 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
 
 void ASDTAIController::UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime)
 {
-    PlayerInteractionBehavior currentBehavior = GetCurrentPlayerInteractionBehavior(detectionHit);
-
-    if (currentBehavior != m_PlayerInteractionBehavior)
+    if (m_PlayerInteractionBehavior == PlayerInteractionBehavior_Collect)
     {
-        m_PlayerInteractionBehavior = currentBehavior;
-        AIStateInterrupted();
+        auto hitComponent = detectionHit.GetComponent();
+        m_FoundPlayer = hitComponent
+            && hitComponent->GetCollisionObjectType() == COLLISION_PLAYER
+            && HasLoSOnHit(detectionHit);
+    }
+    else
+    {
+        PlayerInteractionLoSUpdate();
+        m_FoundPlayer = true;
     }
 }
