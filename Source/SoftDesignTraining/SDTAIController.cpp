@@ -10,6 +10,7 @@
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
 #include "EngineUtils.h"
+#include "SoftDesignTrainingGameMode.h"
 
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
@@ -73,7 +74,7 @@ void ASDTAIController::MoveToRandomCollectible()
 void ASDTAIController::MoveToPlayer()
 {
     ACharacter * playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-    if (!playerCharacter)
+    if (!playerCharacter || (m_BlockingPlayer && !m_ReachedSquadWaypoint))
         return;
 
     MoveToActor(playerCharacter, 0.5f, false, true, true, NULL, false);
@@ -93,17 +94,16 @@ void ASDTAIController::PlayerInteractionLoSUpdate()
     FHitResult losHit;
     GetWorld()->LineTraceSingleByObjectType(losHit, GetPawn()->GetActorLocation(), playerCharacter->GetActorLocation(), TraceObjectTypes);
 
-    bool hasLosOnPlayer = false;
-
+    m_HasLosOnPlayer = false;
     if (losHit.GetComponent())
     {
         if (losHit.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER)
         {
-            hasLosOnPlayer = true;
+            m_HasLosOnPlayer = true;
         }
     }
 
-    if (hasLosOnPlayer)
+    if (m_HasLosOnPlayer)
     {
         if (GetWorld()->GetTimerManager().IsTimerActive(m_PlayerInteractionNoLosTimer))
         {
@@ -127,12 +127,20 @@ void ASDTAIController::OnPlayerInteractionNoLosDone()
 {
     GetWorld()->GetTimerManager().ClearTimer(m_PlayerInteractionNoLosTimer);
     DrawDebugString(GetWorld(), FVector(0.f, 0.f, 10.f), "TIMER DONE", GetPawn(), FColor::Red, 5.f, false);
+    
+    // Update squad LOS
+    if (ASoftDesignTrainingGameMode* gameMode = Cast<ASoftDesignTrainingGameMode>(GetWorld()->GetAuthGameMode()))
+    {
+        gameMode->squadManager.UpdateSightLoss();
+    }
 
+    /*
     if (!AtJumpSegment)
     {
         AIStateInterrupted();
         m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
     }
+    */
 }
 
 void ASDTAIController::MoveToBestFleeLocation()
@@ -280,6 +288,8 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+
+    ShowSquadBelonging();
 }
 
 bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)
@@ -366,6 +376,43 @@ void ASDTAIController::UpdatePlayerInteractionBehavior(const FHitResult& detecti
     else
     {
         PlayerInteractionLoSUpdate();
-        m_FoundPlayer = true;
+        if (m_PlayerInteractionBehavior == PlayerInteractionBehavior_Chase && m_BlockingPlayer && m_ReachedTarget && !m_ReachedSquadWaypoint)
+        {
+            m_ReachedSquadWaypoint = true;
+            m_BlockingPlayer = false;
+            AIStateInterrupted();
+        }
     }
+}
+
+void ASDTAIController::ShowSquadBelonging()
+{
+    if (ASoftDesignTrainingGameMode* gameMode = Cast<ASoftDesignTrainingGameMode>(GetWorld()->GetAuthGameMode()))
+    {
+        if (gameMode->squadManager.IsMember(this))
+        {
+            DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 20.0f, 30, FColor::Magenta);
+        }
+    }
+}
+
+void ASDTAIController::MoveToSquadWaypoint(FVector waypoint)
+{
+    MoveToLocation(waypoint, 0.5f, false, true, false, NULL, false, true);
+    OnMoveToTarget();
+}
+
+void ASDTAIController::UpdateSquadState(FVector waypoint)
+{
+    m_ReachedSquadWaypoint = false;
+    m_BlockingPlayer = true;
+
+    AIStateInterrupted();
+    MoveToSquadWaypoint(waypoint);
+}
+
+void ASDTAIController::ResetSquadState()
+{
+    m_ReachedSquadWaypoint = true;
+    m_BlockingPlayer = false;
 }

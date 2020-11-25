@@ -68,9 +68,22 @@ public:
     void SetActorLocation(const FVector& targetLocation);
     void AIStateInterrupted();
 
+    /* NEW STUFF */
+
     bool m_FoundPlayer = false; // Indique au BT si le joueur est visible ou non
     bool FoundPlayer() { return m_FoundPlayer; }
-    PlayerInteractionBehavior m_PlayerInteractionBehavior;
+
+    PlayerInteractionBehavior m_PlayerInteractionBehavior; // Rendu publique pour l'acces depuis le BT
+
+    void ShowSquadBelonging();
+    void MoveToSquadWaypoint(FVector waypoint);
+    void UpdateSquadState(FVector waypoint);
+    void ResetSquadState();
+    bool m_ReachedSquadWaypoint = false;
+    bool m_BlockingPlayer = false;
+    bool m_HasLosOnPlayer = false;
+
+    /* END OF NEW STUFF */
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;

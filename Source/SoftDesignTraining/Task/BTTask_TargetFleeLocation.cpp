@@ -3,6 +3,7 @@
 
 #include "BTTask_TargetFleeLocation.h"
 #include "../SDTAIController.h"
+#include "../SoftDesignTrainingGameMode.h"
 
 EBTNodeResult::Type UBTTask_TargetFleeLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
@@ -15,6 +16,11 @@ EBTNodeResult::Type UBTTask_TargetFleeLocation::ExecuteTask(UBehaviorTreeCompone
 		{
 			aiController->m_PlayerInteractionBehavior = newBehavior;
 			aiController->AIStateInterrupted();
+
+			if (ASoftDesignTrainingGameMode* gameMode = Cast<ASoftDesignTrainingGameMode>(aiController->GetWorld()->GetAuthGameMode()))
+			{
+				gameMode->squadManager.RemovePawn(aiController);
+			}
 		}
 		return EBTNodeResult::Succeeded;
 	}
