@@ -90,6 +90,9 @@ private:
     virtual void UpdatePlayerInteraction(float deltaTime) override;
     virtual void ShowNavigationPath() override;
 
+	double timeDetectPlayer = 0;
+	double timeFleeLocation = 0;
+	double timeCollectible = 0;
 
 protected:
     FVector m_JumpTarget;

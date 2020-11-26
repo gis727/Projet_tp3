@@ -20,13 +20,17 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
+	double start, end;
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Collect:
 
+		start = FPlatformTime::Seconds();
         MoveToRandomCollectible();
 
-        break;
+		end = FPlatformTime::Seconds();
+		timeCollectible = end - start;
+		break;
 
     case PlayerInteractionBehavior_Chase:
 
@@ -36,8 +40,11 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 
     case PlayerInteractionBehavior_Flee:
 
+		start = FPlatformTime::Seconds();
         MoveToBestFleeLocation();
 
+		end = FPlatformTime::Seconds();
+		timeFleeLocation = end = start;
         break;
     }
 }
@@ -247,6 +254,8 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     if (!selfPawn)
         return;
 
+	double start = FPlatformTime::Seconds();
+
     ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
     if (!playerCharacter)
         return;
@@ -284,6 +293,12 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
         debugString = "Collect";
         break;
     }
+
+	double end = FPlatformTime::Seconds();
+	timeDetectPlayer = end - start;
+	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 20.f), FString::SanitizeFloat(timeDetectPlayer) + " s for object detection.", GetPawn(), FColor::Green, 0.f, false);
+	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 25.f), FString::SanitizeFloat(timeCollectible) + " s for collectible choice.", GetPawn(), FColor::Green, 0.f, false);
+	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 30.f), FString::SanitizeFloat(timeFleeLocation) + " s for flee location.", GetPawn(), FColor::Green, 0.f, false);
 
     DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
 
