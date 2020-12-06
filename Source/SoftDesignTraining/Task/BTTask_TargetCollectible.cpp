@@ -3,6 +3,7 @@
 
 #include "BTTask_TargetCollectible.h"
 #include "../SDTAIController.h"
+#include "../SoftDesignTrainingGameMode.h"
 
 EBTNodeResult::Type UBTTask_TargetCollectible::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
@@ -10,11 +11,11 @@ EBTNodeResult::Type UBTTask_TargetCollectible::ExecuteTask(UBehaviorTreeComponen
 	{
 		const ASDTAIController::PlayerInteractionBehavior previousBehavior = aiController->m_PlayerInteractionBehavior;
 		const ASDTAIController::PlayerInteractionBehavior newBehavior = ASDTAIController::PlayerInteractionBehavior_Collect;
+		ASoftDesignTrainingGameMode* gameMode = Cast<ASoftDesignTrainingGameMode>(aiController->GetWorld()->GetAuthGameMode());
 
-		if (previousBehavior != newBehavior)
+		if (previousBehavior != newBehavior && gameMode != nullptr)
 		{
-
-			aiController->m_PlayerInteractionBehavior = newBehavior;
+			if (!gameMode->squadManager.IsMember(aiController)) aiController->m_PlayerInteractionBehavior = newBehavior;
 		}
 		return EBTNodeResult::Succeeded;
 	}
