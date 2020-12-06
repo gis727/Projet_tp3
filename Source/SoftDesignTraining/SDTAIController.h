@@ -70,18 +70,22 @@ public:
 
     /* NEW STUFF */
 
-    bool m_FoundPlayer = false; // Indique au BT si le joueur est visible ou non
+    bool m_FoundPlayer = false; // Indique au Behavior Tree si le joueur est visible ou non
     bool FoundPlayer() { return m_FoundPlayer; }
 
-    PlayerInteractionBehavior m_PlayerInteractionBehavior; // Rendu publique pour l'acces depuis le BT
+    PlayerInteractionBehavior m_PlayerInteractionBehavior; // Méthode rendu publique pour l'acces depuis le Behavior Tree
 
     void ShowSquadBelonging();
     void MoveToSquadWaypoint(FVector waypoint);
     void UpdateSquadState(FVector waypoint);
     void ResetSquadState();
-    bool m_ReachedSquadWaypoint = false;
-    bool m_BlockingPlayer = false;
-    bool m_HasLosOnPlayer = false;
+    bool m_ReachedSquadWaypoint = false; // Indique si le pawn a atteint le point intermédiaire avant le joueur
+    bool m_BlockingPlayer = false; // Indique si le pawn est en train de contourner le joueur (pour le bloquer)
+    bool m_HasLosOnPlayer = false; // Indique si le pawn est capable de voir le joueur
+
+    double timeDetectPlayer = 0;
+    double timeFleeLocation = 0;
+    double timeCollectible = 0;
 
     /* END OF NEW STUFF */
 
@@ -90,9 +94,6 @@ private:
     virtual void UpdatePlayerInteraction(float deltaTime) override;
     virtual void ShowNavigationPath() override;
 
-	double timeDetectPlayer = 0;
-	double timeFleeLocation = 0;
-	double timeCollectible = 0;
 
 protected:
     FVector m_JumpTarget;

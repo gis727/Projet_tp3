@@ -140,14 +140,6 @@ void ASDTAIController::OnPlayerInteractionNoLosDone()
     {
         gameMode->squadManager.UpdateSightLoss();
     }
-
-    /*
-    if (!AtJumpSegment)
-    {
-        AIStateInterrupted();
-        m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
-    }
-    */
 }
 
 void ASDTAIController::MoveToBestFleeLocation()
@@ -333,32 +325,6 @@ void ASDTAIController::AIStateInterrupted()
     m_ReachedTarget = true;
 }
 
-// Méthode remplacée par le Behavior Tree
-/*
-ASDTAIController::PlayerInteractionBehavior ASDTAIController::GetCurrentPlayerInteractionBehavior(const FHitResult& hit)
-{
-    if (m_PlayerInteractionBehavior == PlayerInteractionBehavior_Collect)
-    {
-        if (!hit.GetComponent())
-            return PlayerInteractionBehavior_Collect;
-
-        if (hit.GetComponent()->GetCollisionObjectType() != COLLISION_PLAYER)
-            return PlayerInteractionBehavior_Collect;
-
-        if (!HasLoSOnHit(hit))
-            return PlayerInteractionBehavior_Collect;
-
-        return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
-    }
-    else
-    {
-        PlayerInteractionLoSUpdate();
-
-        return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
-    }
-}
-*/
-
 void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit)
 {
     for (const FHitResult& hit : hits)
@@ -400,6 +366,9 @@ void ASDTAIController::UpdatePlayerInteractionBehavior(const FHitResult& detecti
     }
 }
 
+/*
+ * Déssine la boule montrant l'appartenance à l'escouade
+ */
 void ASDTAIController::ShowSquadBelonging()
 {
     if (ASoftDesignTrainingGameMode* gameMode = Cast<ASoftDesignTrainingGameMode>(GetWorld()->GetAuthGameMode()))
@@ -411,12 +380,18 @@ void ASDTAIController::ShowSquadBelonging()
     }
 }
 
+/*
+ * Dirige le pawn vers le point intermédiaire (choisi par l'escouade)
+ */
 void ASDTAIController::MoveToSquadWaypoint(FVector waypoint)
 {
-    MoveToLocation(waypoint, 0.5f, false, true, false, NULL, false, true);
+    MoveToLocation(waypoint, 0.5f, true, true, false, NULL, false, true);
     OnMoveToTarget();
 }
 
+/*
+ * Débute l'attaque du joueur en allant vers le point intermédiaire
+ */
 void ASDTAIController::UpdateSquadState(FVector waypoint)
 {
     m_ReachedSquadWaypoint = false;
@@ -426,6 +401,9 @@ void ASDTAIController::UpdateSquadState(FVector waypoint)
     MoveToSquadWaypoint(waypoint);
 }
 
+/*
+ * Rétablit l'état de contournement
+ */
 void ASDTAIController::ResetSquadState()
 {
     m_ReachedSquadWaypoint = true;
